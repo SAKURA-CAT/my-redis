@@ -21,6 +21,13 @@ fn main() {
 }
 
 
-fn handle_client(mut _stream: std::net::TcpStream) {
-    _stream.write_all(b"+PONG\r\n").unwrap();
+fn handle_client(mut stream: std::net::TcpStream) {
+    let buffer = &mut [0; 1024];
+    loop {
+        let read_count = stream.read(buffer).unwrap();
+        if read_count == 0{
+            break;
+        }
+        stream.write_all(b"+PONG\r\n").unwrap();
+    }
 }
