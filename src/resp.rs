@@ -186,22 +186,20 @@ mod test_parse_simple_string {
 fn parse_bulk_string(buf: BytesMut) -> Result<(Value, usize), anyhow::Error> {
     let (bulk_str_len, buf_next) = if let Some((line, next)) = read_until_crlf(&buf[1..]) {
         let bulk_str_len = parse_int(line)?;
-        (bulk_str_len, next)
+        // +1 for the $, which is not included in the bulk string length
+        (bulk_str_len, next + 1)
     } else {
         return Err(anyhow!("Not a bulk string {:?}", buf));
     };
 
     // +2 for \r\n，because '\r\n' is needed in bulk string
-    let end_of_bulk_str = buf_next + bulk_str_len as usize + 3;
+    let end_of_bulk_str = buf_next + bulk_str_len as usize;
     if buf.len() < end_of_bulk_str {
         return Err(anyhow!("Not a bulk string {:?}", buf));
     }
-    // +1 for the $, which is not included in the bulk string length
     Ok((
-        Value::BulkString(String::from_utf8(
-            buf[buf_next + 1..end_of_bulk_str].to_vec(),
-        )?),
-        end_of_bulk_str,
+        Value::BulkString(String::from_utf8(buf[buf_next..end_of_bulk_str].to_vec())?),
+        end_of_bulk_str + 2,
     ))
 }
 
@@ -214,7 +212,7 @@ mod test_parse_bulk_string {
     fn test_parse_bulk_string() {
         let buf = BytesMut::from("$6\r\nfoobar\r\n");
         let result = parse_bulk_string(buf).unwrap();
-        assert_eq!(result.0, Value::BulkString("foobar\r\n".to_string()));
+        assert_eq!(result.0, Value::BulkString("foobar".to_string()));
         assert_eq!(result.1, 12);
     }
     #[test]
@@ -255,8 +253,8 @@ mod test_parse_array {
         assert_eq!(
             result.0,
             super::Value::Array(vec![
-                super::Value::BulkString("foo\r\n".to_string()),
-                super::Value::BulkString("bar\r\n".to_string())
+                super::Value::BulkString("foo".to_string()),
+                super::Value::BulkString("bar".to_string())
             ])
         );
         assert_eq!(result.1, 21);
