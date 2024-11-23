@@ -37,6 +37,8 @@ async fn handle_conn(stream: TcpStream) {
             match command.to_lowercase().as_str() {
                 "ping" => Value::SimpleString("PONG".to_string()),
                 "echo" => args.first().unwrap().clone(),
+                "set" => Value::SimpleString("OK".to_string()),
+                "get" => Value::BulkString("bar".to_string()),
                 c => panic!("unrecognized command: {}", c),
             }
         } else {
