@@ -33,7 +33,7 @@ async fn handle_conn(stream: TcpStream) {
         println!("read value: {:?}", value);
         let response = if let Some(v) = value {
             let (command, args) = extract_command(v).await.unwrap();
-            match command.as_str() {
+            match command.to_lowercase().as_str() {
                 "ping" => Value::SimpleString("PONG".to_string()),
                 "echo" => args.first().unwrap().clone(),
                 c => panic!("unrecognized command: {}", c),
