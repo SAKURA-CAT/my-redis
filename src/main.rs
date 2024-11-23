@@ -1,6 +1,7 @@
 mod resp;
 
 use crate::resp::Value;
+use std::collections::HashMap;
 use tokio::net::{TcpListener, TcpStream};
 
 #[tokio::main]
@@ -27,6 +28,7 @@ async fn main() {
 async fn handle_conn(stream: TcpStream) {
     // Every connection will be created a new RespParser
     let mut parser = resp::RespParser::new(stream);
+    let mut storage: HashMap<String, String> = HashMap::new();
     println!("Handle a conn");
     loop {
         let value = parser.read().await.unwrap();
@@ -37,8 +39,12 @@ async fn handle_conn(stream: TcpStream) {
             match command.to_lowercase().as_str() {
                 "ping" => Value::SimpleString("PONG".to_string()),
                 "echo" => args.first().unwrap().clone(),
-                "set" => Value::SimpleString("OK".to_string()),
-                "get" => Value::BulkString("bar".to_string()),
+                "set" => set(
+                    &mut storage,
+                    unpack_bulk_str(args[0].clone()).unwrap(),
+                    unpack_bulk_str(args[1].clone()).unwrap(),
+                ),
+                "get" => get(&storage, unpack_bulk_str(args[0].clone()).unwrap()),
                 c => panic!("unrecognized command: {}", c),
             }
         } else {
@@ -46,6 +52,18 @@ async fn handle_conn(stream: TcpStream) {
         };
         println!("response: {:?}", response);
         parser.write(response).await.unwrap();
+    }
+}
+
+fn set(storage: &mut HashMap<String, String>, key: String, value: String) -> Value {
+    storage.insert(key, value);
+    Value::SimpleString("OK".to_string())
+}
+
+fn get(storage: &HashMap<String, String>, key: String) -> Value {
+    match storage.get(&key) {
+        Some(v) => Value::BulkString(v.to_string()),
+        None => Value::Null,
     }
 }
 

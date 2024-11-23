@@ -28,6 +28,7 @@ pub enum Value {
     Array(Vec<Value>),
     // Errors(String),
     // Integers(i64),
+    Null,
 }
 
 impl Value {
