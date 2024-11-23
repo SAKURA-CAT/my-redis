@@ -1,36 +1,36 @@
-#![allow(unused_imports)]
+
+mod resp;
 
 use std::io::{Read, Write};
-use std::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
     // unwrap: If the Result is Ok, this method returns the value. If it's Err, it panics.
-    let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
-    for stream in listener.incoming(){
+    let listener = TcpListener::bind("127.0.0.1:6379").await.unwrap();
+    loop {
+        let stream = listener.accept().await;
         match stream {
-            Ok(_stream) => {
-                // 多线程处理
-                std::thread::spawn(move || {
-                    handle_client(_stream);
+            Ok((stream, _)) =>{
+                println!("accepted new connection");
+                tokio::spawn(async move {
+                    handle_conn(stream).await
                 });
             }
             Err(e) => {
                 println!("error: {}", e);
-            }
+                }
         }
     }
 }
 
 
-fn handle_client(mut stream: std::net::TcpStream) {
-    let buffer = &mut [0; 1024];
+async fn handle_conn(mut stream: TcpStream) {
+    // Every connection will be created a new RespParser
+    let parser = resp::RespParser::new(stream);
     loop {
-        let read_count = stream.read(buffer).unwrap();
-        if read_count == 0{
-            break;
-        }
-        stream.write_all(b"+PONG\r\n").unwrap();
+
     }
 }
