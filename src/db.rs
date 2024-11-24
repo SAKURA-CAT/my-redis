@@ -18,7 +18,7 @@ impl Storage {
     pub fn get(&self, key: String) -> Value {
         let key = key.as_str();
         if let Some(expire) = self.expire.get(key) {
-            if expire > &chrono::Utc::now().timestamp() {
+            if expire < &chrono::Utc::now().timestamp_millis() {
                 return Value::Null;
             };
         };
@@ -31,7 +31,7 @@ impl Storage {
     pub fn set(&mut self, key: String, value: String, expire: Option<i64>) -> Value {
         self.data.insert(key.clone(), value);
         if let Some(expire) = expire {
-            self.expire.insert(key, expire + chrono::Utc::now().timestamp());
+            self.expire.insert(key, expire + chrono::Utc::now().timestamp_millis());
         }
         Value::SimpleString("OK".to_string())
     }
@@ -55,5 +55,8 @@ mod test_storage {
         assert_eq!(storage.get("foo".to_string()), Value::Null);
         storage.set("foo".to_string(), "bar".to_string(), Some(10));
         assert_eq!(storage.get("foo".to_string()), Value::BulkString("bar".to_string()));
+        // sleep 11ms, expire
+        std::thread::sleep(std::time::Duration::from_millis(11));
+        assert_eq!(storage.get("foo".to_string()), Value::Null);
     }
 }
