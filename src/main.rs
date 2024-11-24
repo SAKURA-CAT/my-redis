@@ -1,7 +1,8 @@
+mod db;
 mod resp;
 
+use crate::db::Storage;
 use crate::resp::Value;
-use std::collections::HashMap;
 use tokio::net::{TcpListener, TcpStream};
 
 #[tokio::main]
@@ -28,7 +29,7 @@ async fn main() {
 async fn handle_conn(stream: TcpStream) {
     // Every connection will be created a new RespParser
     let mut parser = resp::RespParser::new(stream);
-    let mut storage: HashMap<String, String> = HashMap::new();
+    let mut storage = db::Storage::new();
     println!("Handle a conn");
     loop {
         let value = parser.read().await.unwrap();
@@ -39,12 +40,8 @@ async fn handle_conn(stream: TcpStream) {
             match command.to_lowercase().as_str() {
                 "ping" => Value::SimpleString("PONG".to_string()),
                 "echo" => args.first().unwrap().clone(),
-                "set" => set(
-                    &mut storage,
-                    unpack_bulk_str(args[0].clone()).unwrap(),
-                    unpack_bulk_str(args[1].clone()).unwrap(),
-                ),
-                "get" => get(&storage, unpack_bulk_str(args[0].clone()).unwrap()),
+                "set" => set(&mut storage, args),
+                "get" => get(&mut storage, args),
                 c => panic!("unrecognized command: {}", c),
             }
         } else {
@@ -52,18 +49,6 @@ async fn handle_conn(stream: TcpStream) {
         };
         println!("response: {:?}", response);
         parser.write(response).await.unwrap();
-    }
-}
-
-fn set(storage: &mut HashMap<String, String>, key: String, value: String) -> Value {
-    storage.insert(key, value);
-    Value::SimpleString("OK".to_string())
-}
-
-fn get(storage: &HashMap<String, String>, key: String) -> Value {
-    match storage.get(&key) {
-        Some(v) => Value::BulkString(v.to_string()),
-        None => Value::Null,
     }
 }
 
@@ -82,4 +67,40 @@ fn unpack_bulk_str(value: Value) -> Result<String, anyhow::Error> {
         Value::BulkString(s) => Ok(s),
         _ => Err(anyhow::anyhow!("Expected command to be a bulk string")),
     }
+}
+
+/// SET key value, and optional px seconds
+/// SET key value 'px' seconds
+fn set(storage: &mut Storage, args: Vec<Value>) -> Value {
+    // At least 2 arguments
+    if args.len() < 2 {
+        return Value::Err("SET requires at least 2 arguments".to_string());
+    };
+    // Up to four parameters
+    if args.len() > 4 {
+        return Value::Err("SET requires at most 4 arguments".to_string());
+    };
+    // if args.len() >= 3, the third argument must be 'px'
+    if args.len() >= 3 && unpack_bulk_str(args[2].clone()).unwrap() != "px" {
+        return Value::Err("SET requires 'px' as the third argument".to_string());
+    };
+    let mut expire = None;
+    if args.len() == 4 {
+        let px = unpack_bulk_str(args[3].clone()).unwrap().parse::<i64>();
+        // must be a number
+        expire = Some(if px.is_err() {
+            return Value::Err("Expire time must be a number".to_string());
+        } else {
+            px.unwrap()
+        });
+    };
+    storage.set(
+        unpack_bulk_str(args[0].clone()).unwrap(),
+        unpack_bulk_str(args[1].clone()).unwrap(),
+        expire,
+    )
+}
+
+fn get(storage: &mut Storage, args: Vec<Value>) -> Value {
+    storage.get(unpack_bulk_str(args[0].clone()).unwrap())
 }

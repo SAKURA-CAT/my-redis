@@ -26,9 +26,9 @@ pub enum Value {
     SimpleString(String),
     BulkString(String),
     Array(Vec<Value>),
-    // Errors(String),
-    // Integers(i64),
+    Err(String),
     Null,
+    // Integers(i64),
 }
 
 impl Value {
@@ -36,6 +36,8 @@ impl Value {
         match self {
             Value::SimpleString(s) => format!("+{}\r\n", s),
             Value::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
+            Value::Err(s) => format!("-{}\r\n", s),
+            Value::Null => "$-1\r\n".to_string(),
             // TODO implement serialize for other types
             _ => panic!("Not implemented"),
         }
