@@ -18,7 +18,7 @@ impl Storage {
     pub fn get(&self, key: String) -> Value {
         let key = key.as_str();
         if let Some(expire) = self.expire.get(key) {
-            if expire < &chrono::Utc::now().timestamp() {
+            if expire > &chrono::Utc::now().timestamp() {
                 return Value::Null;
             };
         };
