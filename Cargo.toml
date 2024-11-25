@@ -1,23 +1,16 @@
-# DON'T EDIT THIS!
-#
-# Codecrafters relies on this file being intact to run tests successfully. Any changes
-# here will not reflect when CodeCrafters tests your code, and might even cause build
-# failures.
-#
-# DON'T EDIT THIS!
 [package]
-name = "redis-starter-rust"
+name = "redis"
 version = "0.1.0"
 authors = ["Codecrafters <hello@codecrafters.io>"]
 edition = "2021"
+description = """
+An incomplete implementation of a Rust Redis server. Just for fun.
+"""
 
-# DON'T EDIT THIS!
-#
-# Codecrafters relies on this file being intact to run tests successfully. Any changes
-# here will not reflect when CodeCrafters tests your code, and might even cause build
-# failures.
-#
-# DON'T EDIT THIS!
+[[bin]]
+name = "redis-server"
+path = "src/bin/server.rs"
+
 [dependencies]
 anyhow = "1.0.59"                                   # error handling
 bytes = "1.3.0"                                     # helps manage buffers

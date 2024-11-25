@@ -1,15 +1,17 @@
 use crate::resp::Value;
 use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-pub struct Storage {
+pub struct RedisString {
     data: HashMap<String, String>,
     /// key: String, expire: i64 (timestamp + utc)/ms
     expire: HashMap<String, i64>,
 }
 
-impl Storage {
+impl RedisString {
     pub fn new() -> Self {
-        Storage {
+        RedisString {
             data: HashMap::new(),
             expire: HashMap::new(),
         }
@@ -43,14 +45,14 @@ mod test_storage {
 
     #[test]
     fn test_set_get() {
-        let mut storage = Storage::new();
+        let mut storage = RedisString::new();
         storage.set("foo".to_string(), "bar".to_string(), None);
         assert_eq!(storage.get("foo".to_string()), Value::BulkString("bar".to_string()));
     }
 
     #[test]
     fn test_expire() {
-        let mut storage = Storage::new();
+        let mut storage = RedisString::new();
         storage.set("foo".to_string(), "bar".to_string(), Some(-10));
         assert_eq!(storage.get("foo".to_string()), Value::Null);
         storage.set("foo".to_string(), "bar".to_string(), Some(10));
@@ -59,4 +61,20 @@ mod test_storage {
         std::thread::sleep(std::time::Duration::from_millis(11));
         assert_eq!(storage.get("foo".to_string()), Value::Null);
     }
+}
+
+pub(crate) struct DB {
+    pub string: RwLock<RedisString>,
+}
+
+impl DB {
+    fn new() -> Self {
+        DB {
+            string: RwLock::new(RedisString::new()),
+        }
+    }
+}
+
+pub(crate) fn create() -> Arc<DB> {
+    Arc::new(DB::new())
 }
