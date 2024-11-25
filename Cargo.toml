@@ -17,4 +17,3 @@ bytes = "1.3.0"                                     # helps manage buffers
 thiserror = "2.0.2"                                # error handling
 tokio = { version = "1.23.0", features = ["full"] } # async networking
 nanoid = "0.4.0"  # generate unique string when testing
-chrono = "0.4.38"  # date and time library
