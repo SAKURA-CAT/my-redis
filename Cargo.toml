@@ -1,7 +1,7 @@
 [package]
-name = "redis"
+name = "my-redis"
 version = "0.1.0"
-authors = ["Codecrafters <hello@codecrafters.io>"]
+authors = ["Cunyue <cunykang@gmail.com>"]
 edition = "2021"
 description = """
 An incomplete implementation of a Rust Redis server. Just for fun.
