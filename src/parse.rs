@@ -1,8 +1,7 @@
-//! Parse a array, which means a command sent by the client
+//! Parse an array, which means a command sent by the client
 
 use crate::frame::Frame;
 use anyhow::anyhow;
-use bytes::Bytes;
 use std::{str, vec};
 
 #[derive(Debug)]
@@ -46,18 +45,27 @@ impl Parse {
         }
     }
 
-    /// Return the next block as raw bytes
-    pub(crate) fn next_bytes(&mut self) -> Result<Bytes, ParseError> {
-        match self.next()? {
-            Frame::Bulk(b) => Ok(b),
-            frame => Err(format!("protocol error; expected bulk, got {:?}", frame).into()),
-        }
-    }
+    // /// Return the next block as raw bytes
+    // pub(crate) fn next_bytes(&mut self) -> Result<Bytes, ParseError> {
+    //     match self.next()? {
+    //         Frame::Bulk(b) => Ok(b),
+    //         frame => Err(format!("protocol error; expected bulk, got {:?}", frame).into()),
+    //     }
+    // }
 
     /// Return the next block as an integer
-    pub(crate) fn next_int(&mut self) -> Result<i64, ParseError> {
+    pub(crate) fn next_int(&mut self) -> Result<u64, ParseError> {
         let s = self.next_string()?;
-        s.parse().map_err(|_| "protocol error; invalid number".into())
+        s.parse::<u64>().map_err(|_| "protocol error; invalid number".into())
+    }
+
+    /// Check if there are any remaining blocks
+    pub(crate) fn finish(&mut self) -> Result<(), ParseError> {
+        if self.blocks.next().is_none() {
+            Ok(())
+        } else {
+            Err("protocol error; expected end of frame".into())
+        }
     }
 }
 

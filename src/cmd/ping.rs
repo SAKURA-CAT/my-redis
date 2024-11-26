@@ -1,14 +1,15 @@
 use crate::connection::Connection;
+use crate::frame::Frame;
 
 pub struct Ping {}
 
 impl Ping {
-    pub fn new() -> Self {
+    pub fn from_parse() -> Self {
         Ping {}
     }
 
     pub async fn apply(&self, dst: &mut Connection) -> crate::Result<()> {
-        "+PONG\r\n".to_string();
+        dst.write_frame(&Frame::Simple("PONG".to_string())).await?;
         Ok(())
     }
 }

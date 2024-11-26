@@ -38,7 +38,7 @@ pub enum Error {
 
 impl Frame {
     /// Serialize the frame to a string
-    pub fn serialize(self) -> String {
+    pub fn serialize(&self) -> String {
         match self {
             Frame::Simple(s) => format!("+{}\r\n", s),
             Frame::Bulk(b) => format!("${}\r\n{}\r\n", b.len(), String::from_utf8(b.to_vec()).unwrap()),
