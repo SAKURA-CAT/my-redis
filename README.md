@@ -1,34 +1,39 @@
 [![progress-banner](https://backend.codecrafters.io/progress/redis/f1569a3b-e828-419d-8fb5-423162449f99)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
+`my-redis` is a simple implementation of a Redis server, with a subset of the commands supported by Redis.
+It is an incomplete, idiomatic implementation of a [Redis](https://redis.io/) server built with [Tokio](https://tokio.rs/).
+
 This is a starting point for Rust solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis). Just for fun, and to learn Rust. 
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+While I'm working on this, I also drew inspiration from the [mini-redis](https://github.com/tokio-rs/mini-redis).
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## TODO List
 
-# Passing the first stage
+- [x] Basic server structure
+- [x] Parse RESP protocol
+- [x] Support the basic command parsing, like `SET`, `GET`, `PING`
+- [x] Support expiration
+- [] Background tasks
+- [] OpenTelemetry
+- [] RDB Persistence
+- [] Replication
+- [] Pub/Sub
+- [] Docker image support
 
-The entry point for your Redis implementation is in `src/main.rs`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+## Running
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+The repository provides a RESP-compatible [server](/src/bin/server.rs), which can use `redis-cli` to interact with it.
+
+Start the server:
+
+```shell
+cargo run --bin redis-server
 ```
 
-That's all!
+You can use `redis-cli` to interact with the server like this:
 
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `cargo (1.82)` installed locally
-1. Run `./your_program.sh` to run your Redis server, which is implemented in
-   `src/main.rs`. This command compiles your Rust project, so it might be slow
-   the first time you run it. Subsequent runs will be fast.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+```shell
+redis-cli set foo bar ex 10
+redis-cli get foo  # 'bar' in 10 seconds
+```
