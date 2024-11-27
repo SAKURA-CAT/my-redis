@@ -14,7 +14,7 @@ While I'm working on this, I also drew inspiration from the [mini-redis](https:/
 - [x] Parse RESP protocol
 - [x] Support the basic command parsing, like `SET`, `GET`, `PING`
 - [x] Support expiration
-- [ ] Background tasks
+- [x] Background tasks
 - [ ] OpenTelemetry
 - [ ] RDB Persistence
 - [ ] Replication
